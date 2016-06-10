@@ -1,0 +1,18 @@
+<resources>
+    <string name="google_app_id">133559960336</string>
+    <string name="app_name">Find Center Point</string>
+    <string name="title_activity_main">Find Center Point</string>
+
+    <string name="open_drawer">Open drawer</string>
+    <string name="close_drawer">Close drawer</string>
+
+    <string name="my_position">My position</string>
+    <string name="your_position">Your position</string>
+
+    <string name="button">Find</string>
+
+    <string name="food">Food</string>
+    <string name="restaurant">Restaurant</string>
+    <string name="cafe">Cafe</string>
+
+</resources>
