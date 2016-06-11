@@ -12,6 +12,7 @@ import java.util.ArrayList;
 /**
  * Created by wj on 16/3/29.
  */
+
 public class ImagePagerAdapter extends PagerAdapter {
 
     public ImagePagerAdapter(Context context){
