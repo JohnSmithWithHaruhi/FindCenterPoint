@@ -1,110 +1,159 @@
 package com.JohnSmithWithHaruhi.wj.findcenterpoint2.MainActivity;
 
-import android.os.Bundle;
-import android.util.Log;
+import android.support.v4.content.ContextCompat;
 
+import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Constant;
 import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Model.ApiClient;
-import com.JohnSmithWithHaruhi.wj.findcenterpoint2.PlaceDetail.PlaceDetailFragment;
-import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Selector.SelectFragment;
+import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Model.Unit.NearbySearch.NearbySearch;
+import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Model.Unit.NearbySearch.Photo;
+import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Model.Unit.NearbySearch.Result;
+import com.JohnSmithWithHaruhi.wj.findcenterpoint2.R;
+import com.JohnSmithWithHaruhi.wj.findcenterpoint2.SelectFragment;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
+
 /**
  * Created by wj on 16/6/10.
  */
-public class MainActivityPresenter implements OnMapReadyCallback, MainActivityViewInterface.Presenter, SelectFragment.SelectFragmentListener {
+public class MainActivityPresenter implements MainActivityViewInterface.Presenter, SelectFragment.SelectFragmentListener {
 
     private final static String TAG = "MainActivityPresenter";
     private MainActivityViewInterface.View view;
     private ApiClient apiClient;
 
+    private final static float MarkerColor = BitmapDescriptorFactory.HUE_YELLOW;
     private GoogleMap googleMap;
-    private List<String> stringList = new ArrayList<>();
-    private List<String> placeIDList = new ArrayList<>();
-    private List<Marker> markerList = new ArrayList<>();
-    private List<List<String>> photoList = new ArrayList<>();
+    private Marker myMarker;
+    private Marker yourMarker;
+    private Marker centerMarker;
+    private Polyline polyline;
 
-    MainActivityPresenter(MainActivityViewInterface.View view) {
+    /*private boolean isMyMarker = false;
+    private boolean isYourMarker = false;
+    private boolean isCenterMarker = false;
+    private boolean isPolyline = false;*/
+
+    private List<Result> results = new ArrayList<>();
+    private List<String> placeIDList = new ArrayList<>();
+    private List<String> nameList = new ArrayList<>();
+    private List<Marker> markerList = new ArrayList<>();
+    private List<List<Photo>> photoList = new ArrayList<>();
+
+    public MainActivityPresenter(MainActivityViewInterface.View view) {
         this.view = view;
         apiClient = new ApiClient();
     }
 
+    private void loadData(final MarkerOptions markerOptions, String type) {
+
+        if (!markerList.isEmpty()) {
+            for (Marker marker : markerList) {
+                marker.remove();
+            }
+            markerList.clear();
+            nameList.clear();
+            placeIDList.clear();
+            photoList.clear();
+        }
+
+        apiClient.getPlaceApi().getNearbySearch(
+                Constant.GOOGLE_KEY, "ja",
+                markerOptions.getPosition().latitude + "," + markerOptions.getPosition().longitude,
+                "distance", type, null)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<NearbySearch>() {
+                    @Override
+                    public void onCompleted() {
+                        for (Result result : results) {
+                            markerList.add(googleMap.addMarker(new MarkerOptions()
+                                    .position(new LatLng(result.getGeometry().getLocation().getLat(), result.getGeometry().getLocation().getLng()))
+                                    .title(result.getName())
+                                    .icon(BitmapDescriptorFactory.defaultMarker(MarkerColor))
+                                    .snippet(result.getRating().toString())));
+                            nameList.add(result.getName());
+                            placeIDList.add(result.getId());
+                            photoList.add(result.getPhotos());
+                        }
+                        view.setGoogleMap(markerList, placeIDList, photoList);
+                        view.dismissProgressDialog();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onNext(NearbySearch nearbySearch) {
+                        for (Result result : nearbySearch.getResults()) {
+                            results.add(result);
+                        }
+                    }
+                });
+    }
+
     @Override
     public void onViewCreate() {
-        view.setAdapter(stringList);
+        view.setAdapter(nameList);
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        googleMap.getUiSettings().setMapToolbarEnabled(false);
-        /*if (ActivityCompat.checkSelfPermission(view.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(view.getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }*/
-        //googleMap.setMyLocationEnabled(true);
-        /*googleMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
-            @Override
-            public View getInfoWindow(Marker marker) {
-                return null;
-            }
-
-            @Override
-            public View getInfoContents(Marker marker) {
-                View mView = getLayoutInflater().inflate(R.layout.info_window, null);
-
-                TextView name = (TextView) mView.findViewById(R.id.info_name);
-                name.setText(marker.getTitle());
-
-                RatingBar ratingBar = (RatingBar) mView.findViewById(R.id.info_RB);
-                ratingBar.setRating(Float.valueOf(marker.getSnippet()));
-
-                return mView;
-            }
-        });*/
-        googleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
-            @Override
-            public void onInfoWindowClick(Marker marker) {
-                for (int i = 0; i < markerList.size(); i++) {
-                    if (markerList.get(i).equals(marker)) {
-                        Log.d(TAG, placeIDList.get(i).toString());
-                        Log.d(TAG, String.valueOf(photoList.get(i).size()));
-                        PlaceDetailFragment placeDetailFragment = new PlaceDetailFragment();
-                        Bundle arg = new Bundle();
-                        arg.putString("placeID", placeIDList.get(i).toString());
-                        arg.putStringArrayList("photo", (ArrayList<String>) photoList.get(i));
-                        placeDetailFragment.setArguments(arg);
-                        //getFragmentManager().beginTransaction().addToBackStack(null).add(android.R.id.content, placeDetailFragment).commit();
-                        break;
-                    }
-                }
-            }
-        });
         this.googleMap = googleMap;
     }
 
+    @Override
+    public void onListClick(Integer position) {
+        markerList.get(position).showInfoWindow();
+        googleMap.animateCamera(CameraUpdateFactory.newLatLng(markerList.get(position).getPosition()));
+    }
 
     @Override
     public void onMyMarkerSet(MarkerOptions markerOptions) {
-        googleMap.addMarker(markerOptions);
+        if (myMarker != null) {
+            myMarker.remove();
+        }
+        myMarker = googleMap.addMarker(markerOptions);
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(markerOptions.getPosition()));
     }
 
     @Override
     public void onYouMarkerSet(MarkerOptions markerOptions) {
-        googleMap.addMarker(markerOptions);
+        if (yourMarker != null) {
+            yourMarker.remove();
+        }
+        yourMarker = googleMap.addMarker(markerOptions);
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(markerOptions.getPosition()));
     }
 
     @Override
-    public void onButtonClick(MarkerOptions markerOptions) {
+    public void onButtonClick(MarkerOptions markerOptions, String type) {
         view.showProgressDialog();
-        googleMap.addMarker(markerOptions);
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(markerOptions.getPosition()));
+        if (centerMarker != null) {
+            centerMarker.remove();
+        }
+        centerMarker = googleMap.addMarker(markerOptions);
 
+        if (polyline != null) {
+            polyline.remove();
+        }
+        polyline = googleMap.addPolyline(new PolylineOptions().add(yourMarker.getPosition(), myMarker.getPosition()).color(ContextCompat.getColor(view.getContextCompat(), R.color.colorPrimary)));
+
+        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(markerOptions.getPosition(), 15));
+        loadData(markerOptions, type);
     }
 }

@@ -34,7 +34,7 @@ import java.util.ArrayList;
  * A simple {@link Fragment} subclass.
  */
 
-public class PlaceDetailFragment extends Fragment {
+public class PlaceDetailFragment extends android.app.Fragment {
 
     public PlaceDetailFragment() {
         // Required empty public constructor

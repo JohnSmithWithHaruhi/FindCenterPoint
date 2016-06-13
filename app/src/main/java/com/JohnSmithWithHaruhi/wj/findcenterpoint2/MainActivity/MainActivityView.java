@@ -1,25 +1,33 @@
 package com.JohnSmithWithHaruhi.wj.findcenterpoint2.MainActivity;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.res.Configuration;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.RatingBar;
+import android.widget.TextView;
 
+import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Model.Unit.NearbySearch.Photo;
+import com.JohnSmithWithHaruhi.wj.findcenterpoint2.PlaceDetail.PlaceDetailFragment;
 import com.JohnSmithWithHaruhi.wj.findcenterpoint2.R;
-import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Selector.SelectFragment;
+import com.JohnSmithWithHaruhi.wj.findcenterpoint2.SelectFragment;
 import com.JohnSmithWithHaruhi.wj.findcenterpoint2.databinding.ActivityMainBinding;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.Marker;
 
 import java.util.List;
 
-public class MainActivityView extends AppCompatActivity implements MainActivityViewInterface.View {
+public class MainActivityView extends AppCompatActivity implements MainActivityViewInterface.View, OnMapReadyCallback {
 
     private final static String TAG = "MainActivityView";
     private ActivityMainBinding binding;
@@ -42,7 +50,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityV
         presenter.onViewCreate();
 
         mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.main_map);
-        mapFragment.getMapAsync(presenter);
+        mapFragment.getMapAsync(this);
 
         selectFragment = new SelectFragment();
         selectFragment.setListener(presenter);
@@ -102,23 +110,56 @@ public class MainActivityView extends AppCompatActivity implements MainActivityV
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 binding.mainDL.closeDrawers();
-
-                //TODO
-                //presenter.onItemClick();
-                /*markerList.get(position).showInfoWindow();
-                googleMap.animateCamera(CameraUpdateFactory.newLatLng(Constant.getMarkerList().get(position).getPosition()));*/
+                presenter.onListClick(position);
             }
         });
     }
 
     @Override
-    public void setGoogleMap(GoogleMap googleMap) {
+    public void setGoogleMap(final List<Marker> markerList, final List<String> placeIDList, final List<List<Photo>> photoList) {
 
+        googleMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+            @Override
+            public View getInfoWindow(Marker marker) {
+                return null;
+            }
+
+            @Override
+            public View getInfoContents(Marker marker) {
+                View mView = getLayoutInflater().inflate(R.layout.info_window, null);
+
+                TextView name = (TextView) mView.findViewById(R.id.info_name);
+                name.setText(marker.getTitle());
+
+                RatingBar ratingBar = (RatingBar) mView.findViewById(R.id.info_RB);
+                ratingBar.setRating(Float.valueOf(marker.getSnippet()));
+
+                return mView;
+            }
+        });
+
+        googleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+            @Override
+            public void onInfoWindowClick(Marker marker) {
+                for (int i = 0; i < markerList.size(); i++) {
+                    if (markerList.get(i).equals(marker)) {
+                        Log.d(TAG, placeIDList.get(i));
+                        PlaceDetailFragment placeDetailFragment = new PlaceDetailFragment();
+                        Bundle arg = new Bundle();
+                        arg.putString("placeID", placeIDList.get(i));
+                        //arg.putStringArrayList("photo", (ArrayList<String>) photoList);
+                        placeDetailFragment.setArguments(arg);
+                        getFragmentManager().beginTransaction().addToBackStack(null).add(android.R.id.content, placeDetailFragment).commit();
+                        break;
+                    }
+                }
+            }
+        });
     }
 
     @Override
     public void showProgressDialog() {
-        if(!progressDialog.isShowing()){
+        if (!progressDialog.isShowing()) {
             progressDialog.show();
         }
     }
@@ -130,88 +171,18 @@ public class MainActivityView extends AppCompatActivity implements MainActivityV
         }
     }
 
-    /*private class PlaceSearchAsyncTask extends AsyncTask<Void, Void, JSONObject> {
-
-        String urlStr;
-
-        @Override
-        protected void onPreExecute() {
-            urlStr = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="
-                    + Constant.getCenterPoint().getPosition().latitude + "," + Constant.getCenterPoint().getPosition().longitude
-                    + "&rankby=distance&type=" + Constant.getType() + "&key=AIzaSyB6nijHVZRKORwvDtbC4Ux70w8k9mzW79c";
-            nameList.clear();
-            placeIDList.clear();
-        }
-
-        @Override
-        protected JSONObject doInBackground(Void... params) {
-            HttpURLConnection httpURLConnection = null;
-            try {
-                URL url = new URL(urlStr);
-                httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setRequestMethod("GET");
-                httpURLConnection.connect();
-
-                BufferedInputStream inputStream = new BufferedInputStream(httpURLConnection.getInputStream());
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = inputStream.read(buffer)) != -1) {
-                    if (length > 0) {
-                        outputStream.write(buffer, 0, length);
-                    }
-                }
-                return new JSONObject(new String(outputStream.toByteArray()));
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            return new JSONObject();
-        }
-
-        @Override
-        protected void onPostExecute(JSONObject jsonObject) {
-            Log.d(TAG, jsonObject.toString());
-            ArrayList<MarkerOptions> arrayList = new ArrayList<>();
-            try {
-                JSONArray results = jsonObject.getJSONArray("results");
-                for (int i = 0; i < results.length(); i++) {
-                    MarkerOptions markerOptions = new MarkerOptions().position(new LatLng(results.getJSONObject(i).getJSONObject("geometry").getJSONObject("location").getDouble("lat")
-                            , results.getJSONObject(i).getJSONObject("geometry").getJSONObject("location").getDouble("lng")))
-                            .title(results.getJSONObject(i).getString("name"))
-                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW));
-                    arrayList.add(markerOptions);
-
-                    if (results.getJSONObject(i).has("rating")) {
-                        markerOptions.snippet(results.getJSONObject(i).getString("rating"));
-                    } else {
-                        markerOptions.snippet("0");
-                    }
-
-                    ArrayList<String> tempList = new ArrayList<>();
-                    if (results.getJSONObject(i).has("photos")) {
-                        JSONArray photos = results.getJSONObject(i).getJSONArray("photos");
-                        for (int j = 0; j < photos.length(); j++) {
-                            tempList.add(photos.getJSONObject(j).getString("photo_reference"));
-                        }
-                    }
-
-                    photoList.add(tempList);
-                    nameList.add(results.getJSONObject(i).getString("name"));
-                    placeIDList.add(results.getJSONObject(i).getString("place_id"));
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            Constant.setMarkerList(arrayList);
-            arrayAdapter.notifyDataSetChanged();
-            setMarkers();
-        }
-    }*/
+    @Override
+    public Context getContextCompat() {
+        return getApplicationContext();
+    }
 
 
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        googleMap.getUiSettings().setMapToolbarEnabled(false);
+
+        this.googleMap = googleMap;
+        presenter.onMapReady(this.googleMap);
+    }
 }
 

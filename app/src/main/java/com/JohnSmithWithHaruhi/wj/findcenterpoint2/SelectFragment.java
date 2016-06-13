@@ -1,4 +1,4 @@
-package com.JohnSmithWithHaruhi.wj.findcenterpoint2.Selector;
+package com.JohnSmithWithHaruhi.wj.findcenterpoint2;
 
 
 import android.app.Dialog;
@@ -11,8 +11,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RadioGroup;
 
-import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Constant;
-import com.JohnSmithWithHaruhi.wj.findcenterpoint2.R;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
@@ -39,6 +37,8 @@ public class SelectFragment extends DialogFragment {
     private RadioGroup radioGroup;
     private Button button;
 
+    private String type = "food";
+
     public SelectFragment() {
     }
 
@@ -47,7 +47,7 @@ public class SelectFragment extends DialogFragment {
 
         void onYouMarkerSet(MarkerOptions markerOptions);
 
-        void onButtonClick(MarkerOptions markerOptions);
+        void onButtonClick(MarkerOptions markerOptions, String type);
     }
 
     public void setListener(SelectFragmentListener listener) {
@@ -105,7 +105,7 @@ public class SelectFragment extends DialogFragment {
                     listener.onButtonClick(new MarkerOptions().title("Center Point")
                             .position(new LatLng(lat, lng))
                             .icon(BitmapDescriptorFactory.defaultMarker(centerMarkerColor))
-                            .snippet("0"));
+                            .snippet("0"), type);
                 }
                 getDialog().dismiss();
             }
@@ -117,13 +117,13 @@ public class SelectFragment extends DialogFragment {
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 switch (checkedId) {
                     case R.id.select_RB1:
-                        Constant.setType("food");
+                        type = "food";
                         break;
                     case R.id.select_RB2:
-                        Constant.setType("restaurant");
+                        type = "restaurant";
                         break;
                     case R.id.select_RB3:
-                        Constant.setType("cafe");
+                        type = "cafe";
                         break;
                 }
             }
