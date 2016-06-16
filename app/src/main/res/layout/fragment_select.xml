@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SelectFragment">
+    tools:context=".Unit.SelectFragment">
 
     <LinearLayout
         android:layout_width="300dp"
@@ -31,7 +31,7 @@
             android:layout_marginTop="12dp"
             android:orientation="horizontal">
 
-            <RadioButton
+            <android.support.v7.widget.AppCompatRadioButton
                 android:id="@+id/select_RB1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -39,14 +39,14 @@
                 android:drawableLeft="@drawable/ic_local_dining"
                 android:text="@string/food" />
 
-            <RadioButton
+            <android.support.v7.widget.AppCompatRadioButton
                 android:id="@+id/select_RB2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:drawableLeft="@drawable/ic_restaurant"
                 android:text="@string/restaurant" />
 
-            <RadioButton
+            <android.support.v7.widget.AppCompatRadioButton
                 android:id="@+id/select_RB3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -54,7 +54,7 @@
                 android:text="@string/cafe" />
         </RadioGroup>
 
-        <Button
+        <android.support.v7.widget.AppCompatButton
             android:id="@+id/select_Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
