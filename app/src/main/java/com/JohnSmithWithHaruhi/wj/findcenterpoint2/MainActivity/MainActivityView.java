@@ -173,7 +173,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityV
                         }
 
                         placeDetailView.setArguments(arg);
-                        getFragmentManager().beginTransaction().addToBackStack(null).replace(android.R.id.content, placeDetailView).commit();
+                        getFragmentManager().beginTransaction().addToBackStack(null).add(android.R.id.content, placeDetailView).commit();
                         break;
                     }
                 }
