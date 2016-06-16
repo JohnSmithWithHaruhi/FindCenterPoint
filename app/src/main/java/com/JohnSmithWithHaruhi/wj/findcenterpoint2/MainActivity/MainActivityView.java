@@ -1,5 +1,6 @@
 package com.JohnSmithWithHaruhi.wj.findcenterpoint2.MainActivity;
 
+import android.app.FragmentManager;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.res.Configuration;
@@ -16,9 +17,9 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Model.Unit.NearbySearch.Photo;
-import com.JohnSmithWithHaruhi.wj.findcenterpoint2.PlaceDetail.PlaceDetailFragment;
+import com.JohnSmithWithHaruhi.wj.findcenterpoint2.PlaceDetail.PlaceDetailView;
 import com.JohnSmithWithHaruhi.wj.findcenterpoint2.R;
-import com.JohnSmithWithHaruhi.wj.findcenterpoint2.SelectFragment;
+import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Unit.SelectFragment;
 import com.JohnSmithWithHaruhi.wj.findcenterpoint2.databinding.ActivityMainBinding;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -55,13 +56,14 @@ public class MainActivityView extends AppCompatActivity implements MainActivityV
         selectFragment = new SelectFragment();
         selectFragment.setListener(presenter);
 
-
-        setActionBar(binding.mainToolbar);
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-        getActionBar().setHomeButtonEnabled(true);
+        setSupportActionBar(binding.mainToolbar);
 
         drawerToggle = new ActionBarDrawerToggle(this, binding.mainDL, R.string.open_drawer, R.string.close_drawer);
         binding.mainDL.addDrawerListener(drawerToggle);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+
 
         binding.mainFAB.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -89,8 +91,17 @@ public class MainActivityView extends AppCompatActivity implements MainActivityV
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (drawerToggle.onOptionsItemSelected(item)) {
-            return true;
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                FragmentManager fragmentManager = getFragmentManager();
+                if (fragmentManager.getBackStackEntryCount() > 0) {
+                    fragmentManager.popBackStack();
+                    break;
+                } else {
+                    drawerToggle.onOptionsItemSelected(item);
+                }
+            default:
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -99,6 +110,8 @@ public class MainActivityView extends AppCompatActivity implements MainActivityV
     public void onBackPressed() {
         if (getFragmentManager().getBackStackEntryCount() > 0) {
             getFragmentManager().popBackStack();
+        } else {
+            super.onBackPressed();
         }
     }
 
@@ -116,7 +129,12 @@ public class MainActivityView extends AppCompatActivity implements MainActivityV
     }
 
     @Override
-    public void setGoogleMap(final List<Marker> markerList, final List<String> placeIDList, final List<List<Photo>> photoList) {
+    public void notifyAdapterChange() {
+        arrayAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void setGoogleMapInfoWindow(final List<Marker> markerList, final List<String> placeIDList, final List<List<Photo>> photoList) {
 
         googleMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
             @Override
@@ -144,12 +162,18 @@ public class MainActivityView extends AppCompatActivity implements MainActivityV
                 for (int i = 0; i < markerList.size(); i++) {
                     if (markerList.get(i).equals(marker)) {
                         Log.d(TAG, placeIDList.get(i));
-                        PlaceDetailFragment placeDetailFragment = new PlaceDetailFragment();
+                        PlaceDetailView placeDetailView = new PlaceDetailView();
+
                         Bundle arg = new Bundle();
                         arg.putString("placeID", placeIDList.get(i));
-                        //arg.putStringArrayList("photo", (ArrayList<String>) photoList);
-                        placeDetailFragment.setArguments(arg);
-                        getFragmentManager().beginTransaction().addToBackStack(null).add(android.R.id.content, placeDetailFragment).commit();
+
+                        if (photoList.get(i).size() != 0) {
+                            arg.putString("photoUrl", photoList.get(i).get(0).getPhotoReference());
+                            Log.d(TAG, "photoUrl " + photoList.get(i).get(0).getPhotoReference());
+                        }
+
+                        placeDetailView.setArguments(arg);
+                        getFragmentManager().beginTransaction().addToBackStack(null).replace(android.R.id.content, placeDetailView).commit();
                         break;
                     }
                 }
@@ -176,10 +200,10 @@ public class MainActivityView extends AppCompatActivity implements MainActivityV
         return getApplicationContext();
     }
 
-
     @Override
     public void onMapReady(GoogleMap googleMap) {
         googleMap.getUiSettings().setMapToolbarEnabled(false);
+        googleMap.setIndoorEnabled(false);
 
         this.googleMap = googleMap;
         presenter.onMapReady(this.googleMap);

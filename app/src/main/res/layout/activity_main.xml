@@ -16,11 +16,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <Toolbar
+            <android.support.v7.widget.Toolbar
                 android:id="@+id/main_Toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-            </Toolbar>
+                android:layout_height="wrap_content"></android.support.v7.widget.Toolbar>
         </android.support.design.widget.AppBarLayout>
 
         <android.support.v4.widget.DrawerLayout
@@ -45,8 +44,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentBottom="true"
                     android:layout_alignParentRight="true"
-                    android:layout_marginBottom="16dp"
-                    android:layout_marginRight="16dp"
+                    android:layout_margin="16dp"
                     android:src="@drawable/ic_search"
                     app:fabSize="normal" />
             </RelativeLayout>
@@ -57,6 +55,7 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="start"
                 android:background="@color/colorGrey200" />
+
         </android.support.v4.widget.DrawerLayout>
     </RelativeLayout>
 

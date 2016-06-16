@@ -15,7 +15,9 @@ public interface MainActivityViewInterface {
     interface View {
         void setAdapter(List<String> list);
 
-        void setGoogleMap(List<Marker> markerList, List<String> placeIDList, List<List<Photo>> photoList);
+        void setGoogleMapInfoWindow(List<Marker> markerList, List<String> placeIDList, List<List<Photo>> photoList);
+
+        void notifyAdapterChange();
 
         void showProgressDialog();
 
@@ -26,7 +28,9 @@ public interface MainActivityViewInterface {
 
     interface Presenter {
         void onViewCreate();
+
         void onMapReady(GoogleMap googleMap);
+
         void onListClick(Integer position);
     }
 }

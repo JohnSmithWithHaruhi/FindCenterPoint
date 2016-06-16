@@ -1,4 +1,4 @@
-package com.JohnSmithWithHaruhi.wj.findcenterpoint2;
+package com.JohnSmithWithHaruhi.wj.findcenterpoint2.Unit;
 
 import android.content.Context;
 import android.graphics.Bitmap;

@@ -24,4 +24,5 @@ public class ApiClient {
     public PlaceApi getPlaceApi() {
         return placeApi;
     }
+
 }

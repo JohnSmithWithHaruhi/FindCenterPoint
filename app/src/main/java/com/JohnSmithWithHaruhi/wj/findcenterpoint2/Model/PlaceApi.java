@@ -1,5 +1,6 @@
 package com.JohnSmithWithHaruhi.wj.findcenterpoint2.Model;
 
+import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Model.Unit.Details.Details;
 import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Model.Unit.NearbySearch.NearbySearch;
 
 import retrofit2.http.GET;
@@ -18,9 +19,9 @@ public interface PlaceApi {
                                              @Query("type") String type,
                                              @Query("pagetoken") String pageToken);
 
-    /*@GET("place/details/json")
-    Observable<Place> getPlaceDetail(@Query("language") String language,
-                                     @Query("key") String key,
-                                     @Query("placeid") String placeID);*/
+    @GET("maps/api/place/details/json")
+    Observable<Details> getPlaceDetail(@Query("key") String key,
+                                       @Query("language") String language,
+                                       @Query("placeid") String placeID);
 
 }

@@ -1,4 +1,4 @@
-package com.JohnSmithWithHaruhi.wj.findcenterpoint2;
+package com.JohnSmithWithHaruhi.wj.findcenterpoint2.Unit;
 
 
 import android.app.Dialog;
@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RadioGroup;
 
+import com.JohnSmithWithHaruhi.wj.findcenterpoint2.R;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;

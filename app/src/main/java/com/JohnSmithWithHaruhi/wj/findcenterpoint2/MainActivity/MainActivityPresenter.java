@@ -2,13 +2,13 @@ package com.JohnSmithWithHaruhi.wj.findcenterpoint2.MainActivity;
 
 import android.support.v4.content.ContextCompat;
 
-import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Constant;
 import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Model.ApiClient;
 import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Model.Unit.NearbySearch.NearbySearch;
 import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Model.Unit.NearbySearch.Photo;
 import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Model.Unit.NearbySearch.Result;
 import com.JohnSmithWithHaruhi.wj.findcenterpoint2.R;
-import com.JohnSmithWithHaruhi.wj.findcenterpoint2.SelectFragment;
+import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Unit.Constant;
+import com.JohnSmithWithHaruhi.wj.findcenterpoint2.Unit.SelectFragment;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -41,12 +41,6 @@ public class MainActivityPresenter implements MainActivityViewInterface.Presente
     private Marker centerMarker;
     private Polyline polyline;
 
-    /*private boolean isMyMarker = false;
-    private boolean isYourMarker = false;
-    private boolean isCenterMarker = false;
-    private boolean isPolyline = false;*/
-
-    private List<Result> results = new ArrayList<>();
     private List<String> placeIDList = new ArrayList<>();
     private List<String> nameList = new ArrayList<>();
     private List<Marker> markerList = new ArrayList<>();
@@ -71,24 +65,14 @@ public class MainActivityPresenter implements MainActivityViewInterface.Presente
 
         apiClient.getPlaceApi().getNearbySearch(
                 Constant.GOOGLE_KEY, "ja",
-                markerOptions.getPosition().latitude + "," + markerOptions.getPosition().longitude,
-                "distance", type, null)
+                markerOptions.getPosition().latitude + "," + markerOptions.getPosition().longitude, "distance", type, null)
                 .subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<NearbySearch>() {
                     @Override
                     public void onCompleted() {
-                        for (Result result : results) {
-                            markerList.add(googleMap.addMarker(new MarkerOptions()
-                                    .position(new LatLng(result.getGeometry().getLocation().getLat(), result.getGeometry().getLocation().getLng()))
-                                    .title(result.getName())
-                                    .icon(BitmapDescriptorFactory.defaultMarker(MarkerColor))
-                                    .snippet(result.getRating().toString())));
-                            nameList.add(result.getName());
-                            placeIDList.add(result.getId());
-                            photoList.add(result.getPhotos());
-                        }
-                        view.setGoogleMap(markerList, placeIDList, photoList);
+                        view.notifyAdapterChange();
+                        view.setGoogleMapInfoWindow(markerList, placeIDList, photoList);
                         view.dismissProgressDialog();
                     }
 
@@ -100,7 +84,21 @@ public class MainActivityPresenter implements MainActivityViewInterface.Presente
                     @Override
                     public void onNext(NearbySearch nearbySearch) {
                         for (Result result : nearbySearch.getResults()) {
-                            results.add(result);
+                            MarkerOptions tempMarkerOptions = new MarkerOptions()
+                                    .position(new LatLng(result.getGeometry().getLocation().getLat(), result.getGeometry().getLocation().getLng()))
+                                    .title(result.getName())
+                                    .icon(BitmapDescriptorFactory.defaultMarker(MarkerColor));
+
+                            if (result.getRating() != null) {
+                                tempMarkerOptions.snippet(result.getRating().toString());
+                            } else {
+                                tempMarkerOptions.snippet("0");
+                            }
+
+                            markerList.add(googleMap.addMarker(tempMarkerOptions));
+                            nameList.add(result.getName());
+                            placeIDList.add(result.getPlaceId());
+                            photoList.add(result.getPhotos());
                         }
                     }
                 });
