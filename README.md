@@ -21,5 +21,5 @@ you can download it from here
 **MVP Pattern：**
 - MainActivity
 
-**MVVC Pattern：**
+**MVVM Pattern：**
 - PlaceDetail
